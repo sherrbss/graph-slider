@@ -8,9 +8,6 @@ import { AnimatePresence, motion } from "framer-motion";
 function ThemeSwitcher() {
   const { theme, setTheme } = useTheme();
   const isDark = React.useMemo(() => theme === "dark", [theme]);
-
-  console.log({ theme, isDark });
-
   return (
     <button
       className="w-9 px-0"

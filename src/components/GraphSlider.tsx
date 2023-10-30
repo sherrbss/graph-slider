@@ -3,7 +3,8 @@
 import React from "react";
 
 import { useSpring, easings } from "@react-spring/web";
-import { useHover, useMouse, useUpdate } from "ahooks";
+import { useMouseInElement } from "@/hooks/useElementSize";
+import { useElementSize } from "@/hooks/useMouseInElement";
 
 const STROKE_DEFINITION =
   "M3.39622 186.948H14.5303C15.2314 186.948 15.8936 186.626 16.3265 186.074L22.9168 177.677C23.7626 176.599 25.3603 176.504 26.3284 177.473L41.5721 192.734C42.0003 193.163 42.5815 193.404 43.1875 193.404H59.2312C59.7142 193.404 60.1848 193.25 60.5752 192.966L67.1611 188.171C68.1134 187.478 69.4369 187.622 70.2166 188.506L77.3631 196.6C78.1747 197.519 79.5674 197.633 80.5177 196.858L104.823 177.037C105.774 176.262 107.166 176.376 107.978 177.296L114.65 184.853C115.606 185.935 117.314 185.87 118.184 184.718L128.222 171.429C128.526 171.026 128.956 170.736 129.443 170.603L145.259 166.284C145.988 166.085 146.572 165.538 146.817 164.823L153.829 144.402C154.053 143.749 154.56 143.233 155.208 142.998L166.644 138.834C167.184 138.638 167.629 138.245 167.893 137.734L172.184 129.402C173.018 127.782 175.32 127.744 176.208 129.335L187.56 149.68C188.121 150.686 189.343 151.116 190.41 150.685L207.469 143.784C208.115 143.523 208.607 142.981 208.803 142.312L221.178 100.267C221.522 99.098 222.723 98.4051 223.907 98.6925L233.424 101.002C234.412 101.242 235.44 100.8 235.945 99.9176L244.91 84.2513C245.585 83.071 247.136 82.7391 248.236 83.5395L252.888 86.9272C254.02 87.7515 255.621 87.3718 256.262 86.1268L256.756 85.1683C257.513 83.698 259.534 83.4954 260.568 84.7861L271.18 98.0327C272.328 99.4649 274.61 99.0268 275.146 97.2716L286.424 60.3201C286.827 59.0008 288.298 58.337 289.554 58.9083L303.47 65.2413C304.34 65.6371 305.364 65.4495 306.037 64.7711L318.656 52.0495C319.085 51.6173 319.668 51.3741 320.277 51.3741H338.657C339.679 51.3741 340.576 52.053 340.854 53.0362L346.821 74.1388C347.347 75.9985 349.802 76.4046 350.899 74.8132L362.604 57.83";
@@ -14,63 +15,20 @@ const WIDTH = 366;
 const HEIGHT = 213;
 const LINE_WIDTH = 2;
 const DOT_SIZE = 16;
-const PIXEL_TO_MS_RATIO = 3;
-
-function useMouseInElement(ref: React.RefObject<HTMLDivElement>) {
-  const isHovering = useHover(ref);
-  const mouse = useMouse(ref.current);
-
-  return React.useMemo(
-    () => ({
-      isOutside: !isHovering,
-      elementX: mouse.elementX,
-      elementWidth: mouse.elementW,
-      elementPositionX: mouse.elementPosX,
-    }),
-    [mouse, isHovering]
-  );
-}
-
-function useElementSize(ref: React.RefObject<HTMLDivElement>) {
-  const [size, setSize] = React.useState({ width: 0, height: 0 });
-
-  React.useEffect(() => {
-    const handleResize = () => {
-      if (ref.current) {
-        setSize({
-          width: ref.current.offsetWidth,
-          height: ref.current.offsetHeight,
-        });
-      }
-    };
-
-    if (ref.current) {
-      handleResize();
-    }
-
-    window.addEventListener("resize", handleResize);
-    return () => {
-      window.removeEventListener("resize", handleResize);
-    };
-  }, [ref, setSize]);
-
-  return size;
-}
 
 function GraphSlider() {
   const graphSlider = React.useRef<HTMLDivElement>(null);
   const dot = React.useRef<HTMLDivElement>(null);
 
-  const update = useUpdate();
-
-  const { elementPositionX: dotX } = useMouseInElement(dot);
   const { width: parentWidth } = useElementSize(graphSlider);
   const { elementPositionX: parentLeft } = useMouseInElement(graphSlider);
 
   const isPointerOverRef = React.useRef(false);
 
   /* position of mouse within screen */
+  const [_flag, setFlag] = React.useState<number>(0);
   const [clientX, setClientX] = React.useState<number>(0);
+  const dotX = dot.current?.getBoundingClientRect().x ?? 0;
 
   /* relative position of mouse within parent */
   const parentX = clientX - parentLeft;
@@ -83,10 +41,19 @@ function GraphSlider() {
 
   /* assemble the date */
   const date = React.useMemo(() => {
+    if (
+      Number.isNaN(parentX) ||
+      parentWidth === 0 ||
+      (parentX < 0 && clientX === 0)
+    ) {
+      return {
+        hour: "7",
+        minute: "00",
+      };
+    }
+
     const percentage = parentX / parentWidth;
     const percentToMinutes = Math.floor(percentage * 60);
-
-    console.log({ percentage, percentToMinutes, less: percentToMinutes - 25 });
 
     if (percentToMinutes >= 25) {
       return {
@@ -99,7 +66,7 @@ function GraphSlider() {
         minute: percentToMinutes.toString().padStart(2, "0"),
       };
     }
-  }, [parentX, parentWidth]);
+  }, [parentX, parentWidth, clientX]);
 
   /* interpolate the mouse position */
   const [{ interpolatedClientX }] = useSpring(
@@ -107,9 +74,6 @@ function GraphSlider() {
       interpolatedClientX: 0,
       config: {
         easing: easings.easeInElastic,
-      },
-      onChange: (result, ctrl, item) => {
-        update();
       },
     }),
     []
@@ -121,13 +85,20 @@ function GraphSlider() {
    * @param e - mouse event
    */
   const onMouseEnter = (e: React.MouseEvent<HTMLDivElement>) => {
-    const diffInPixels = Math.abs(e.clientX - clientX);
-    setTimeout(() => {
-      isPointerOverRef.current = true;
-    }, diffInPixels * PIXEL_TO_MS_RATIO);
-
     interpolatedClientX.set(clientX);
-    interpolatedClientX.start(e.clientX);
+    interpolatedClientX.start(e.clientX, {
+      onChange: (result) => {
+        setClientX(result as unknown as number);
+      },
+      onRest: () => {
+        isPointerOverRef.current = true;
+        const interval = setInterval(() => setFlag((prev) => prev + 1), 25);
+        setTimeout(() => clearInterval(interval), 100);
+      },
+      config: {
+        duration: (Math.abs(e.clientX - clientX) / parentWidth) * 200,
+      },
+    });
   };
 
   /**
@@ -137,7 +108,6 @@ function GraphSlider() {
    */
   const onMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (isPointerOverRef.current) {
-      console.log("ON MOUSE MOVE");
       setClientX(e.clientX);
     }
 
@@ -150,15 +120,21 @@ function GraphSlider() {
    * @param e - mouse event
    */
   const onMouseLeave = (e: React.MouseEvent<HTMLDivElement>) => {
-    const diffInPixels = Math.abs(e.clientX - clientX);
-    setTimeout(() => {
-      isPointerOverRef.current = false;
-    }, diffInPixels * PIXEL_TO_MS_RATIO);
-
     interpolatedClientX.set(e.clientX);
-    interpolatedClientX.start(parentLeft + parentWidth);
-
-    // TODO - reset date
+    interpolatedClientX.start(parentLeft + parentWidth, {
+      onChange: (result) => {
+        setClientX(result as unknown as number);
+      },
+      onRest: () => {
+        isPointerOverRef.current = false;
+        const interval = setInterval(() => setFlag((prev) => prev + 1), 25);
+        setTimeout(() => clearInterval(interval), 100);
+      },
+      config: {
+        duration:
+          (Math.abs(parentLeft + parentWidth - e.clientX) / parentWidth) * 200,
+      },
+    });
   };
 
   return (
