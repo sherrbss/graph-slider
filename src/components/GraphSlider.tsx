@@ -73,7 +73,7 @@ function GraphSlider() {
     () => ({
       interpolatedClientX: 0,
       config: {
-        easing: easings.easeInElastic,
+        easing: easings.easeOutQuint,
       },
     }),
     []
@@ -96,7 +96,7 @@ function GraphSlider() {
         setTimeout(() => clearInterval(interval), 100);
       },
       config: {
-        duration: (Math.abs(e.clientX - clientX) / parentWidth) * 200,
+        duration: (Math.abs(e.clientX - clientX) / parentWidth) * 400,
       },
     });
   };
@@ -132,7 +132,7 @@ function GraphSlider() {
       },
       config: {
         duration:
-          (Math.abs(parentLeft + parentWidth - e.clientX) / parentWidth) * 200,
+          (Math.abs(parentLeft + parentWidth - e.clientX) / parentWidth) * 400,
       },
     });
   };
