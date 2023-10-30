@@ -84,7 +84,7 @@ function GraphSlider() {
    *
    * @param e - mouse event
    */
-  const onMouseEnter = (e: React.MouseEvent<HTMLDivElement>) => {
+  const onMouseEnter = (e: React.PointerEvent<HTMLDivElement>) => {
     interpolatedClientX.set(clientX);
     interpolatedClientX.start(e.clientX, {
       onChange: (result) => {
@@ -106,7 +106,7 @@ function GraphSlider() {
    *
    * @param e - mouse event
    */
-  const onMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+  const onMouseMove = (e: React.PointerEvent<HTMLDivElement>) => {
     if (isPointerOverRef.current) {
       setClientX(e.clientX);
     }
@@ -119,7 +119,7 @@ function GraphSlider() {
    *
    * @param e - mouse event
    */
-  const onMouseLeave = (e: React.MouseEvent<HTMLDivElement>) => {
+  const onMouseLeave = (e: React.PointerEvent<HTMLDivElement>) => {
     interpolatedClientX.set(e.clientX);
     interpolatedClientX.start(parentLeft + parentWidth, {
       onChange: (result) => {
@@ -156,9 +156,9 @@ function GraphSlider() {
           width: "100%",
           height: "100%",
         }}
-        onMouseEnter={onMouseEnter}
-        onMouseMove={onMouseMove}
-        onMouseLeave={onMouseLeave}
+        onPointerEnter={onMouseEnter}
+        onPointerMove={onMouseMove}
+        onPointerLeave={onMouseLeave}
       >
         {/* TIME */}
         <div

@@ -8,7 +8,13 @@
 @tailwind components;
 @tailwind utilities;
 
+html {
+  height: -webkit-fill-available;
+}
+
 body {
   color: var(--gray-12);
   background: var(--gray-2);
+  min-height: 100vh;
+  min-height: -webkit-fill-available;
 }

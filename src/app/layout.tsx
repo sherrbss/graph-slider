@@ -15,10 +15,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" className="overscroll-y-none">
       <body
         className={cn(
-          "min-h-screen bg-[--gray-2] font-sans antialiased",
+          "min-h-[calc(100dvh)]  bg-[--gray-2] font-sans antialiased",
           fontSans.variable
         )}
       >
