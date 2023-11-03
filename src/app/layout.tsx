@@ -3,6 +3,7 @@ import "./globals.css";
 import { ThemeProvider } from "../providers/ThemeProvider";
 import { cn } from "@/lib/utils";
 import { fontSans } from "@/lib/fonts";
+import ClientLeva from "@/components/ClientLeva";
 
 export const metadata: Metadata = {
   title: "Graph Slider",
@@ -22,6 +23,7 @@ export default function RootLayout({
           fontSans.variable
         )}
       >
+        <ClientLeva />
         <ThemeProvider
           attribute="class"
           defaultTheme="dark"
