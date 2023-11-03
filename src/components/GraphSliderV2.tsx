@@ -10,11 +10,10 @@ import {
   useGraphContext,
 } from "@/providers/GraphProvider";
 import { useControls } from "leva";
+import moment from "moment";
 
 const WIDTH = 366;
 const HEIGHT = 213;
-const BOTTOM_PADDING = 16;
-const TOP_PADDING = 50;
 const LINE_WIDTH = 2;
 const DOT_SIZE = 16;
 
@@ -101,6 +100,7 @@ const GraphSliderV2Internals: React.FC<
     dot,
     parentWidth,
     parentHeight,
+    getTimeFromX,
   } = useGraphContext();
 
   const { elementPositionX: parentLeft, isOutside } =
@@ -121,33 +121,8 @@ const GraphSliderV2Internals: React.FC<
 
   /* assemble the date */
   const date = React.useMemo(() => {
-    if (
-      Number.isNaN(parentX) ||
-      parentWidth === 0 ||
-      (parentX < 0 && clientX === 0)
-    ) {
-      return {
-        hour: "7",
-        minute: "35",
-      };
-    }
-
-    const percentage = parentX / parentWidth;
-    const clampedPercentage = Math.min(Math.max(percentage, 0), 1);
-    const percentToMinutes = Math.floor(clampedPercentage * 60);
-
-    if (percentToMinutes >= 25) {
-      return {
-        hour: "8",
-        minute: (percentToMinutes - 25).toString().padStart(2, "0"),
-      };
-    } else {
-      return {
-        hour: "7",
-        minute: (35 + percentToMinutes).toString().padStart(2, "0"),
-      };
-    }
-  }, [parentX, parentWidth, clientX]);
+    return moment.unix(getTimeFromX(x)).format("MMM D YYYY h:mm a");
+  }, [x, getTimeFromX]);
 
   /**
    * Handles mouse event events.
@@ -176,6 +151,7 @@ const GraphSliderV2Internals: React.FC<
    */
   const onMouseLeave = (e: React.PointerEvent<HTMLDivElement>) => {
     // TODO
+    setClientX(parentLeft + parentWidth);
   };
 
   /**
@@ -185,7 +161,6 @@ const GraphSliderV2Internals: React.FC<
    */
   const onTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
     setClientX(e.touches[0].clientX);
-
     // TODO - setDate
   };
 
@@ -244,7 +219,7 @@ const GraphSliderV2Internals: React.FC<
               transform: "translateX(-50%)",
             }}
           >
-            {`${date.hour}:${date.minute}`} AM
+            {date}
           </div>
         </animated.div>
 
@@ -346,18 +321,8 @@ const GraphSliderV2Internals: React.FC<
 };
 
 function GraphSliderV2() {
-  const dataIndexRef = React.useRef(0);
-  const [data, setData] = React.useState(chartData[0]);
-
-  const toggleData = () => {
-    if (dataIndexRef.current === 0) {
-      dataIndexRef.current = 1;
-      setData(chartData[1]);
-    } else {
-      dataIndexRef.current = 0;
-      setData(chartData[0]);
-    }
-  };
+  const [index, setIndex] = React.useState(0);
+  const data = React.useMemo(() => chartData[index], [index]);
 
   return (
     <div
@@ -379,11 +344,34 @@ function GraphSliderV2() {
           height: "100%",
         }}
       >
-        <button onClick={() => toggleData()}>toggle data</button>
+        <button
+          style={{
+            fontWeight: 500,
+            ...(index === 0 && {
+              fontWeight: 500,
+              textDecoration: "underline",
+            }),
+          }}
+          onClick={() => setIndex(0)}
+        >
+          1w
+        </button>
+        <button
+          style={{
+            fontWeight: 500,
+            ...(index === 1 && {
+              fontWeight: 500,
+              textDecoration: "underline",
+            }),
+          }}
+          onClick={() => setIndex(1)}
+        >
+          1m
+        </button>
       </div>
       <GraphContextProvider
         data={data}
-        style={{ paddingTop: 16, paddingBottom: 0 }}
+        style={{ paddingTop: 72, paddingBottom: 0 }}
       >
         <GraphSliderV2Internals />
       </GraphContextProvider>

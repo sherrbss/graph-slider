@@ -25,6 +25,7 @@ type GraphContextData = {
   dot: React.RefObject<HTMLDivElement>;
   parentWidth: number;
   parentHeight: number;
+  getTimeFromX: (x: number) => number;
 };
 
 const GraphContext = React.createContext<GraphContextData>(
@@ -141,6 +142,20 @@ export const GraphContextProvider: React.FC<
     },
   });
 
+  // TODO - fixme - this is hacky
+  const getTimeFromX = React.useCallback(
+    (x: number) => {
+      const percentage = x / parentWidth;
+      const clampedPercentage = Math.min(Math.max(percentage, 0), 1);
+      const index = Math.floor(clampedPercentage * data.length);
+      if (data.length > index) {
+        return data[index][0];
+      }
+      return data[0][0];
+    },
+    [data, parentWidth]
+  );
+
   const value = React.useMemo(
     () => ({
       d: pathD,
@@ -152,6 +167,7 @@ export const GraphContextProvider: React.FC<
       dot,
       parentWidth,
       parentHeight,
+      getTimeFromX,
     }),
     [
       pathD,
@@ -163,6 +179,7 @@ export const GraphContextProvider: React.FC<
       dot,
       parentWidth,
       parentHeight,
+      getTimeFromX,
     ]
   );
 
