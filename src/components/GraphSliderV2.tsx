@@ -2,7 +2,7 @@
 
 import React from "react";
 
-import { animated, to } from "@react-spring/web";
+import { animated, easings, to, useSpring } from "@react-spring/web";
 import { useMouseInElement } from "@/hooks/useElementSize";
 import { DUMMY_30D_CHART_DATA, DUMMY_7D_CHART_DATA } from "@/lib/data";
 import {
@@ -124,13 +124,47 @@ const GraphSliderV2Internals: React.FC<
     return moment.unix(getTimeFromX(x)).format("MMM D YYYY h:mm a");
   }, [x, getTimeFromX]);
 
+  /* interpolate the mouse position */
+  const isPointerOverRef = React.useRef(false);
+  const isInitialAnimationCompleteRef = React.useRef(false);
+  const isExitAnimationCompleteRef = React.useRef(false);
+  const [_flag, setFlag] = React.useState<number>(0);
+  const [{ interpolatedClientX }] = useSpring(
+    () => ({
+      interpolatedClientX: 0,
+      config: {
+        easing: easings.easeOutQuint,
+      },
+    }),
+    []
+  );
+
   /**
    * Handles mouse event events.
    *
    * @param e - mouse event
    */
   const onMouseEnter = (e: React.PointerEvent<HTMLDivElement>) => {
-    // TODO
+    isPointerOverRef.current = true;
+
+    if (isExitAnimationCompleteRef.current) {
+      isExitAnimationCompleteRef.current = false;
+      interpolatedClientX.set(clientX);
+    }
+
+    interpolatedClientX.start(e.clientX, {
+      onChange: (result) => {
+        setClientX(result as unknown as number);
+      },
+      onRest: () => {
+        isInitialAnimationCompleteRef.current = true;
+        const interval = setInterval(() => setFlag((prev) => prev + 1), 25);
+        setTimeout(() => clearInterval(interval), 100);
+      },
+      config: {
+        duration: (Math.abs(e.clientX - clientX) / parentWidth) * 400,
+      },
+    });
   };
 
   /**
@@ -139,9 +173,25 @@ const GraphSliderV2Internals: React.FC<
    * @param e - mouse event
    */
   const onMouseMove = (e: React.PointerEvent<HTMLDivElement>) => {
-    setClientX(e.clientX);
-
-    // TODO - setDate
+    if (
+      isInitialAnimationCompleteRef.current &&
+      isExitAnimationCompleteRef.current
+    ) {
+      setClientX(e.clientX);
+    } else {
+      interpolatedClientX.start(e.clientX, {
+        onChange: (result) => {
+          setClientX(result as unknown as number);
+        },
+        onRest: () => {
+          const interval = setInterval(() => setFlag((prev) => prev + 1), 25);
+          setTimeout(() => clearInterval(interval), 100);
+        },
+        config: {
+          duration: (Math.abs(e.clientX - clientX) / parentWidth) * 400,
+        },
+      });
+    }
   };
 
   /**
@@ -150,8 +200,27 @@ const GraphSliderV2Internals: React.FC<
    * @param e - mouse event
    */
   const onMouseLeave = (e: React.PointerEvent<HTMLDivElement>) => {
-    // TODO
-    setClientX(parentLeft + parentWidth);
+    isPointerOverRef.current = false;
+
+    if (isInitialAnimationCompleteRef.current) {
+      isInitialAnimationCompleteRef.current = false;
+      interpolatedClientX.set(e.clientX);
+    }
+
+    interpolatedClientX.start(parentLeft + parentWidth, {
+      onChange: (result) => {
+        setClientX(result as unknown as number);
+      },
+      onRest: () => {
+        isExitAnimationCompleteRef.current = true;
+        const interval = setInterval(() => setFlag((prev) => prev + 1), 25);
+        setTimeout(() => clearInterval(interval), 100);
+      },
+      config: {
+        duration:
+          (Math.abs(parentLeft + parentWidth - e.clientX) / parentWidth) * 400,
+      },
+    });
   };
 
   /**
@@ -160,7 +229,7 @@ const GraphSliderV2Internals: React.FC<
    * @param e - mouse event
    */
   const onTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
-    setClientX(e.touches[0].clientX);
+    // setClientX(e.touches[0].clientX);
     // TODO - setDate
   };
 
