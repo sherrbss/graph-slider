@@ -38,57 +38,57 @@ function rgbToHex(value: { r: number; g: number; b: number }) {
 const GraphSliderV2Internals: React.FC<
   React.PropsWithChildren<{ data?: [number, number][] }>
 > = ({ data: _data }) => {
-  const {
-    hoverGradientTopColor,
-    hoverGradientTopOpacity,
-    hoverGradientBottomColor,
-    hoverGradientBottomOpacity,
-    gradientTopColor,
-    gradientTopOpacity,
-    gradientBottomColor,
-    gradientBottomOpacity,
-  } = useControls({
-    hoverGradientTopColor: {
-      value: {
-        r: 0.417 * 255,
-        g: 0.341 * 255,
-        b: 0.784 * 255,
-      },
-    },
-    hoverGradientTopOpacity: {
-      value: 0.225,
-    },
-    hoverGradientBottomColor: {
-      value: {
-        r: 0.417 * 255,
-        g: 0.341 * 255,
-        b: 0.784 * 255,
-      },
-    },
-    hoverGradientBottomOpacity: {
-      value: 0,
-    },
-    gradientTopColor: {
-      value: {
-        r: 0.849 * 255,
-        g: 0.849 * 255,
-        b: 0.849 * 255,
-      },
-    },
-    gradientTopOpacity: {
-      value: 0.5,
-    },
-    gradientBottomColor: {
-      value: {
-        r: 0.849 * 255,
-        g: 0.849 * 255,
-        b: 0.849 * 255,
-      },
-    },
-    gradientBottomOpacity: {
-      value: 0,
-    },
-  });
+  // const {
+  //   hoverGradientTopColor,
+  //   hoverGradientTopOpacity,
+  //   hoverGradientBottomColor,
+  //   hoverGradientBottomOpacity,
+  //   gradientTopColor,
+  //   gradientTopOpacity,
+  //   gradientBottomColor,
+  //   gradientBottomOpacity,
+  // } = useControls({
+  //   hoverGradientTopColor: {
+  //     value: {
+  //       r: 0.417 * 255,
+  //       g: 0.341 * 255,
+  //       b: 0.784 * 255,
+  //     },
+  //   },
+  //   hoverGradientTopOpacity: {
+  //     value: 0.225,
+  //   },
+  //   hoverGradientBottomColor: {
+  //     value: {
+  //       r: 0.417 * 255,
+  //       g: 0.341 * 255,
+  //       b: 0.784 * 255,
+  //     },
+  //   },
+  //   hoverGradientBottomOpacity: {
+  //     value: 0,
+  //   },
+  //   gradientTopColor: {
+  //     value: {
+  //       r: 0.849 * 255,
+  //       g: 0.849 * 255,
+  //       b: 0.849 * 255,
+  //     },
+  //   },
+  //   gradientTopOpacity: {
+  //     value: 0.5,
+  //   },
+  //   gradientBottomColor: {
+  //     value: {
+  //       r: 0.849 * 255,
+  //       g: 0.849 * 255,
+  //       b: 0.849 * 255,
+  //     },
+  //   },
+  //   gradientBottomOpacity: {
+  //     value: 0,
+  //   },
+  // });
 
   const {
     d: pathD,
@@ -281,7 +281,7 @@ const GraphSliderV2Internals: React.FC<
               y2="211.205"
               gradientUnits="userSpaceOnUse"
             >
-              <stop
+              {/* <stop
                 stopColor={rgbToHex(hoverGradientTopColor)}
                 stopOpacity={hoverGradientTopOpacity}
               />
@@ -289,9 +289,9 @@ const GraphSliderV2Internals: React.FC<
                 offset="1"
                 stopColor={rgbToHex(hoverGradientBottomColor)}
                 stopOpacity={hoverGradientBottomOpacity}
-              />
-              {/* <stop stopColor="var(--violet-9)" stopOpacity="0.225" />
-              <stop offset="1" stopColor="var(--violet-9)" stopOpacity="0" /> */}
+              /> */}
+              <stop stopColor="var(--violet-9)" stopOpacity="0.225" />
+              <stop offset="1" stopColor="var(--violet-9)" stopOpacity="0" />
             </linearGradient>
             <linearGradient
               id="gradient-grayscale"
@@ -301,7 +301,7 @@ const GraphSliderV2Internals: React.FC<
               y2="211.205"
               gradientUnits="userSpaceOnUse"
             >
-              <stop
+              {/* <stop
                 stopColor={rgbToHex(gradientTopColor)}
                 stopOpacity={gradientTopOpacity}
               />
@@ -309,9 +309,9 @@ const GraphSliderV2Internals: React.FC<
                 offset="1"
                 stopColor={rgbToHex(gradientBottomColor)}
                 stopOpacity={gradientBottomOpacity}
-              />
-              {/* <stop stopColor="var(--gray-6)" stopOpacity="0.5" />
-              <stop offset="1" stopColor="var(--gray-6)" stopOpacity="0" /> */}
+              /> */}
+              <stop stopColor="var(--gray-6)" stopOpacity="0.5" />
+              <stop offset="1" stopColor="var(--gray-6)" stopOpacity="0" />
             </linearGradient>
           </defs>
         </svg>

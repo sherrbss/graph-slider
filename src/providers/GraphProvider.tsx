@@ -6,7 +6,16 @@ import { largestTriangleThreeBucket } from "d3fc";
 import { useSpring, SpringValue } from "@react-spring/web";
 import { useElementSize } from "@/hooks/useMouseInElement";
 import { interpolatePath } from "d3-interpolate-path";
-import { curveLinear, curveLinearClosed, line } from "d3-shape";
+import {
+  curveBasis,
+  curveBumpX,
+  curveCatmullRom,
+  curveLinear,
+  curveLinearClosed,
+  curveMonotoneX,
+  curveNatural,
+  line,
+} from "d3-shape";
 import { scaleLinear, scaleTime } from "d3-scale";
 import { extent } from "d3-array";
 import { useControls } from "leva";
@@ -86,7 +95,7 @@ export const GraphContextProvider: React.FC<
 
   /* use d3-interpolate-path to interpolate even with different points */
   const pathD = line()
-    .curve(curveLinear)
+    .curve(curveBasis)
     .x(function (d) {
       return scaleTimeToX(d[0]); //using the scale here
     })
@@ -97,7 +106,7 @@ export const GraphContextProvider: React.FC<
       return scalePriceToY(priceBefore);
     })(data);
   const pathDGradient = line()
-    .curve(curveLinearClosed)
+    .curve(curveBasis)
     .x(function (d) {
       return scaleTimeToX(d[0]); //using the scale here
     })
@@ -148,10 +157,10 @@ export const GraphContextProvider: React.FC<
       const percentage = x / parentWidth;
       const clampedPercentage = Math.min(Math.max(percentage, 0), 1);
       const index = Math.floor(clampedPercentage * data.length);
-      if (data.length > index) {
-        return data[index][0];
-      }
-      return data[0][0];
+
+      if (Number.isNaN(index)) return data[0][0];
+      if (index >= data.length) return data[data.length - 1][0];
+      return data[index][0];
     },
     [data, parentWidth]
   );
