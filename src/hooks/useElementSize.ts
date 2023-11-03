@@ -1,21 +1,34 @@
 "use client";
 
 import * as React from "react";
-import { useHover, useMouse } from "ahooks";
 
-function useMouseInElement(ref: React.RefObject<HTMLDivElement>) {
-  const isHovering = useHover(ref);
-  const mouse = useMouse(ref.current);
+function useElementSize(ref: React.RefObject<HTMLDivElement>) {
+  const [size, setSize] = React.useState({ width: 0, height: 0, left: 0 });
 
-  return React.useMemo(
-    () => ({
-      isOutside: !isHovering,
-      elementX: mouse.elementX,
-      elementWidth: mouse.elementW,
-      elementPositionX: mouse.elementPosX,
-    }),
-    [mouse, isHovering]
-  );
+  React.useEffect(() => {
+    const handleResize = () => {
+      if (ref.current) {
+        // const boundingBox = ;
+        // console.log("BOUNDING", { boundingBox });
+        setSize((prev) => ({
+          left: ref.current?.getBoundingClientRect().x ?? prev.left,
+          width: ref.current.offsetWidth,
+          height: ref.current.offsetHeight,
+        }));
+      }
+    };
+
+    if (ref.current) {
+      handleResize();
+    }
+
+    window.addEventListener("resize", handleResize);
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, [ref, setSize]);
+
+  return size;
 }
 
-export { useMouseInElement };
+export { useElementSize };

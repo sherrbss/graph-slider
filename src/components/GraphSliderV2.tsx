@@ -3,7 +3,7 @@
 import React from "react";
 
 import { animated, easings, to, useSpring } from "@react-spring/web";
-import { useMouseInElement } from "@/hooks/useElementSize";
+import { useMouseInElement } from "@/hooks/useMouseInElement";
 import { DUMMY_30D_CHART_DATA, DUMMY_7D_CHART_DATA } from "@/lib/data";
 import {
   GraphContextProvider,
@@ -35,61 +35,47 @@ function rgbToHex(value: { r: number; g: number; b: number }) {
     componentToHex(value.b)
   );
 }
+
+function useAnimatedPath({ toggle, delay }) {
+  const [length, setLength] = React.useState(null);
+  const animatedStyle = useSpring({
+    strokeDashoffset: toggle ? 0 : length,
+    strokeDasharray: length,
+    // delay,
+  });
+
+  return {
+    style: animatedStyle,
+    ref: (ref) => {
+      if (ref) {
+        setLength(ref.getTotalLength());
+      }
+    },
+  };
+}
+
+function useAnimatedFill({ toggle, delay }) {
+  const [length, setLength] = React.useState(null);
+  const animatedStyle = useSpring({
+    ...(!toggle && {
+      clipPath: `inset(0 ${length}px 0 0)`,
+    }),
+    // delay,
+  });
+
+  return {
+    style: animatedStyle,
+    ref: (ref) => {
+      if (ref) {
+        setLength(ref.getTotalLength());
+      }
+    },
+  };
+}
+
 const GraphSliderV2Internals: React.FC<
   React.PropsWithChildren<{ data?: [number, number][] }>
 > = ({ data: _data }) => {
-  // const {
-  //   hoverGradientTopColor,
-  //   hoverGradientTopOpacity,
-  //   hoverGradientBottomColor,
-  //   hoverGradientBottomOpacity,
-  //   gradientTopColor,
-  //   gradientTopOpacity,
-  //   gradientBottomColor,
-  //   gradientBottomOpacity,
-  // } = useControls({
-  //   hoverGradientTopColor: {
-  //     value: {
-  //       r: 0.417 * 255,
-  //       g: 0.341 * 255,
-  //       b: 0.784 * 255,
-  //     },
-  //   },
-  //   hoverGradientTopOpacity: {
-  //     value: 0.225,
-  //   },
-  //   hoverGradientBottomColor: {
-  //     value: {
-  //       r: 0.417 * 255,
-  //       g: 0.341 * 255,
-  //       b: 0.784 * 255,
-  //     },
-  //   },
-  //   hoverGradientBottomOpacity: {
-  //     value: 0,
-  //   },
-  //   gradientTopColor: {
-  //     value: {
-  //       r: 0.849 * 255,
-  //       g: 0.849 * 255,
-  //       b: 0.849 * 255,
-  //     },
-  //   },
-  //   gradientTopOpacity: {
-  //     value: 0.5,
-  //   },
-  //   gradientBottomColor: {
-  //     value: {
-  //       r: 0.849 * 255,
-  //       g: 0.849 * 255,
-  //       b: 0.849 * 255,
-  //     },
-  //   },
-  //   gradientBottomOpacity: {
-  //     value: 0,
-  //   },
-  // });
-
   const {
     d: pathD,
     springProps,
@@ -100,21 +86,43 @@ const GraphSliderV2Internals: React.FC<
     dot,
     parentWidth,
     parentHeight,
+    parentLeft,
     getTimeFromX,
+    // strokeDashOffsetInterpolator,
+    // strokeDashOffsetInterpolatorGradient,
+    // initialSpringProps,
+    // initialSpringPropsGradient,
+    // strokeDashOffset,
+    // strokeDashOffsetGradient,
+    initialClipPath,
   } = useGraphContext();
 
-  const { elementPositionX: parentLeft, isOutside } =
-    useMouseInElement(graphSlider);
+  const [toggle, setToggle] = React.useState(false);
+
+  const animationProps = useAnimatedPath({
+    toggle,
+    delay: 0,
+  });
+  const animatedFillProps = useAnimatedFill({
+    toggle,
+    delay: 0,
+  });
+
+  React.useEffect(() => {
+    setToggle(true);
+  }, []);
 
   /* position of mouse within screen */
   const [clientX, setClientX] = React.useState<number>(0);
-  const dotX = dot.current?.getBoundingClientRect().x ?? 0;
+  const dotX = dot.current?.getBoundingClientRect().x ?? parentLeft;
 
   /* relative position of mouse within parent */
-  const parentX = clientX - parentLeft;
+  const parentX =
+    Number.isNaN(clientX) || clientX <= 0 ? parentWidth : clientX - parentLeft;
 
   /* compute the difference between the center of the dot and the cursor position */
   const x = parentX + (dotX + (DOT_SIZE + 2) / 2 - clientX) - LINE_WIDTH / 2;
+  // const x = Number.isNaN(_x) || _x <= 0 ? parentWidth : _x;
 
   /* inset the active line and gradient */
   const clipPath = `inset(0 ${parentWidth - x - LINE_WIDTH * 2}px 0 0)`;
@@ -142,9 +150,9 @@ const GraphSliderV2Internals: React.FC<
   /**
    * Handles mouse event events.
    *
-   * @param e - mouse event
+   * @param e - pointer event
    */
-  const onMouseEnter = (e: React.PointerEvent<HTMLDivElement>) => {
+  const onPointerEnter = (e: React.PointerEvent<HTMLDivElement>) => {
     isPointerOverRef.current = true;
 
     if (isExitAnimationCompleteRef.current) {
@@ -170,9 +178,9 @@ const GraphSliderV2Internals: React.FC<
   /**
    * Handles mouse move events.
    *
-   * @param e - mouse event
+   * @param e - pointer event
    */
-  const onMouseMove = (e: React.PointerEvent<HTMLDivElement>) => {
+  const onPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
     if (
       isInitialAnimationCompleteRef.current &&
       isExitAnimationCompleteRef.current
@@ -197,9 +205,9 @@ const GraphSliderV2Internals: React.FC<
   /**
    * Handles mouse leave events.
    *
-   * @param e - mouse event
+   * @param e - pointer event
    */
-  const onMouseLeave = (e: React.PointerEvent<HTMLDivElement>) => {
+  const onPointerLeave = (e: React.PointerEvent<HTMLDivElement>) => {
     isPointerOverRef.current = false;
 
     if (isInitialAnimationCompleteRef.current) {
@@ -252,10 +260,10 @@ const GraphSliderV2Internals: React.FC<
           width: "100%",
           height: "100%",
         }}
-        onPointerEnter={onMouseEnter}
-        onPointerMove={onMouseMove}
+        onPointerEnter={onPointerEnter}
+        onPointerMove={onPointerMove}
         onTouchMove={onTouchMove}
-        onPointerLeave={onMouseLeave}
+        onPointerLeave={onPointerLeave}
       >
         {/* TIME */}
         <animated.div
@@ -318,25 +326,35 @@ const GraphSliderV2Internals: React.FC<
         >
           {/* GRADIENT */}
           <animated.path
+            // {...animatedFillProps}
             d={to(springPropsGradient.t, pathInterpolatorGradient)}
             fill="url(#gradient-grayscale)"
           />
           <animated.path
+            // {...animatedFillProps}
             d={to(springPropsGradient.t, pathInterpolatorGradient)}
             fill="url(#gradient-color)"
-            style={{ clipPath }}
+            style={{
+              // ...animatedFillProps.style,
+              clipPath,
+            }}
           />
 
           {/* PATH */}
           <g strokeWidth="2.2" strokeLinecap="round">
             <animated.path
+              // {...animationProps}
               d={to(springProps.t, pathInterpolator)}
               stroke="var(--gray-7)"
             />
             <animated.path
+              // {...animationProps}
               d={to(springProps.t, pathInterpolator)}
               stroke="var(--violet-9)"
-              style={{ clipPath }}
+              style={{
+                // ...animationProps.style,
+                clipPath,
+              }}
             />
           </g>
 
@@ -350,15 +368,6 @@ const GraphSliderV2Internals: React.FC<
               y2="211.205"
               gradientUnits="userSpaceOnUse"
             >
-              {/* <stop
-                stopColor={rgbToHex(hoverGradientTopColor)}
-                stopOpacity={hoverGradientTopOpacity}
-              />
-              <stop
-                offset="1"
-                stopColor={rgbToHex(hoverGradientBottomColor)}
-                stopOpacity={hoverGradientBottomOpacity}
-              /> */}
               <stop stopColor="var(--violet-9)" stopOpacity="0.225" />
               <stop offset="1" stopColor="var(--violet-9)" stopOpacity="0" />
             </linearGradient>
@@ -370,15 +379,6 @@ const GraphSliderV2Internals: React.FC<
               y2="211.205"
               gradientUnits="userSpaceOnUse"
             >
-              {/* <stop
-                stopColor={rgbToHex(gradientTopColor)}
-                stopOpacity={gradientTopOpacity}
-              />
-              <stop
-                offset="1"
-                stopColor={rgbToHex(gradientBottomColor)}
-                stopOpacity={gradientBottomOpacity}
-              /> */}
               <stop stopColor="var(--gray-6)" stopOpacity="0.5" />
               <stop offset="1" stopColor="var(--gray-6)" stopOpacity="0" />
             </linearGradient>

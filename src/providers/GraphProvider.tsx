@@ -4,7 +4,7 @@ import React from "react";
 
 import { largestTriangleThreeBucket } from "d3fc";
 import { useSpring, SpringValue } from "@react-spring/web";
-import { useElementSize } from "@/hooks/useMouseInElement";
+import { useElementSize } from "@/hooks/useElementSize";
 import { interpolatePath } from "d3-interpolate-path";
 import {
   curveBasis,
@@ -19,6 +19,7 @@ import {
 import { scaleLinear, scaleTime } from "d3-scale";
 import { extent } from "d3-array";
 import { useControls } from "leva";
+import { useMount } from "ahooks";
 
 type GraphContextData = {
   d: string;
@@ -30,10 +31,12 @@ type GraphContextData = {
   };
   pathInterpolator: (t: number) => string;
   pathInterpolatorGradient: (t: number) => string;
+  initialClipPath: string;
   graphSlider: React.RefObject<HTMLDivElement>;
   dot: React.RefObject<HTMLDivElement>;
   parentWidth: number;
   parentHeight: number;
+  parentLeft: number;
   getTimeFromX: (x: number) => number;
 };
 
@@ -77,8 +80,11 @@ export const GraphContextProvider: React.FC<
   const dot = React.useRef<HTMLDivElement>(null);
 
   /* parent sizing */
-  const { width: parentWidth, height: parentHeight } =
-    useElementSize(graphSlider);
+  const {
+    width: parentWidth,
+    height: parentHeight,
+    left: parentLeft,
+  } = useElementSize(graphSlider);
 
   /* bounds */
   const [minX, maxX] = extent(data, (d) => d[0]);
@@ -121,6 +127,16 @@ export const GraphContextProvider: React.FC<
   const currD = React.useRef(pathD);
   const currDGradient = React.useRef(pathDGradient);
 
+  /* create initial path interpolator */
+  // const pathInterpolator = React.useMemo(
+  //   () => interpolatePath(currD.current, pathD),
+  //   [pathD]
+  // );
+  // const pathInterpolatorGradient = React.useMemo(
+  //   () => interpolatePath(currDGradient.current, pathDGradient),
+  //   [pathDGradient]
+  // );
+
   /* create an interpolator that maps from t (0 to 1) to a path d string */
   const pathInterpolator = React.useMemo(
     () => interpolatePath(currD.current, pathD),
@@ -130,24 +146,96 @@ export const GraphContextProvider: React.FC<
     () => interpolatePath(currDGradient.current, pathDGradient),
     [pathDGradient]
   );
+  const strokeDashOffsetInterpolator = React.useMemo(
+    () => (t: number) => t * parentWidth,
+    [parentWidth]
+  );
+  const strokeDashOffsetInterpolatorGradient = React.useMemo(
+    () => (t: number) => t * parentWidth,
+    [parentWidth]
+  );
+
+  const [mounted, setMounted] = React.useState(false);
+  // const [initialAnimationDone, setInitialAnimationDone] = React.useState(false);
+  // const [initialGradientAnimationDone, setInitialGradientAnimationDone] =
+  //   React.useState(false);
+  const initialAnimationDoneRef = React.useRef(false);
+  const initialGradientAnimationDoneRef = React.useRef(false);
+  // const [initialAnimationDone, setInitialAnimationDone] = React.useState(false);
+  // const [initialGradientAnimationDone, setInitialGradientAnimationDone] = React.useState(false);
+  useMount(() => setTimeout(() => setMounted(true), 1000));
+
+  const [strokeDashOffset, setStrokeDashOffset] = React.useState(0);
+  const [strokeDashOffsetGradient, setStrokeDashOffsetGradient] =
+    React.useState(0);
+  const currStrokeDashOffset = React.useRef(strokeDashOffset);
+  const currStrokeDashOffsetGradient = React.useRef(strokeDashOffsetGradient);
+  const [initialClipPath, setClipPath] = React.useState("");
 
   /* create a spring that maps from t = 0 (start animation) to t = 1 (end of animation) */
   const springProps = useSpring({
+    immediate: !mounted,
     from: { t: 0 },
     to: { t: 1 },
-    // reset t to 0 when the path changes so we can begin interpolating anew
-    reset: currD.current !== pathD,
-    // when t updates, update the last seen D so we can handle interruptions
+    reset: initialAnimationDoneRef.current && currD.current !== pathD,
     onChange: (result) => {
-      currD.current = pathInterpolator(result.value.t);
+      if (initialAnimationDoneRef.current) {
+        currD.current = pathInterpolator(result.value.t);
+      } else {
+        currD.current = pathD;
+      }
+    },
+    onRest: () => {
+      if (!initialAnimationDoneRef.current) {
+        console.log("INITIAL DONE");
+        initialAnimationDoneRef.current = true;
+      }
     },
   });
   const springPropsGradient = useSpring({
+    immediate: !mounted,
     from: { t: 0 },
     to: { t: 1 },
-    reset: currDGradient.current !== pathDGradient,
+    reset:
+      initialGradientAnimationDoneRef.current &&
+      currDGradient.current !== pathDGradient,
     onChange: (result) => {
-      currDGradient.current = pathInterpolatorGradient(result.value.t);
+      if (initialGradientAnimationDoneRef.current) {
+        currDGradient.current = pathInterpolatorGradient(result.value.t);
+      } else {
+        currDGradient.current = pathDGradient;
+      }
+    },
+    onRest: () => {
+      if (!initialGradientAnimationDoneRef.current) {
+        console.log("INITIAL GRADIENT DONE");
+        initialGradientAnimationDoneRef.current = true;
+      }
+    },
+  });
+
+  const initialClipPathRef = React.useRef(false);
+  const springPropsClipPath = useSpring({
+    immediate: !mounted,
+    from: { t: 0 },
+    to: { t: 1 },
+    reset: !initialClipPathRef.current,
+    onChange: (result) => {
+      const x = strokeDashOffsetInterpolator(result.value.t);
+      const val = `inset(0 ${parentWidth - x - 2 * 2}px 0 0)`;
+      console.log("CLIP PATH", val);
+      setClipPath(val);
+      // if (initialGradientAnimationDoneRef.current) {
+      //   currDGradient.current = pathInterpolatorGradient(result.value.t);
+      // } else {
+      //   currDGradient.current = pathDGradient;
+      // }
+    },
+    onRest: () => {
+      if (!initialClipPathRef.current) {
+        console.log("INITIAL CLIP PATH DONE");
+        initialClipPathRef.current = true;
+      }
     },
   });
 
@@ -176,7 +264,9 @@ export const GraphContextProvider: React.FC<
       dot,
       parentWidth,
       parentHeight,
+      parentLeft,
       getTimeFromX,
+      initialClipPath,
     }),
     [
       pathD,
@@ -188,7 +278,9 @@ export const GraphContextProvider: React.FC<
       dot,
       parentWidth,
       parentHeight,
+      parentLeft,
       getTimeFromX,
+      initialClipPath,
     ]
   );
 
