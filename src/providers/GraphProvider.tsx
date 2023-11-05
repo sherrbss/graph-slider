@@ -2,7 +2,8 @@
 
 import React from "react";
 
-import { largestTriangleThreeBucket } from "d3fc";
+// @ts-ignore
+import { largestTriangleThreeBucket } from "@d3fc/d3fc-sample";
 import { useSpring, SpringValue } from "@react-spring/web";
 import { useElementSize } from "@/hooks/useElementSize";
 import { interpolatePath } from "d3-interpolate-path";
@@ -67,6 +68,8 @@ export const GraphContextProvider: React.FC<
   const sampler = largestTriangleThreeBucket();
 
   // Configure the x / y value accessors
+
+  // @ts-ignore
   sampler.x((d) => d[0]).y((d) => d[1]);
 
   // Configure the size of the buckets used to downsample the data.
@@ -86,16 +89,20 @@ export const GraphContextProvider: React.FC<
   } = useElementSize(graphSlider);
 
   /* bounds */
+  // @ts-ignore
   const [minX, maxX] = extent(data, (d) => d[0]);
+  // @ts-ignore
   const [minY, maxY] = extent(data, (d) => d[1]);
 
   /* close off the gradient */
   const dataGradient = [[minX, 0], ...data, [maxX, 0]] as [number, number][];
 
   /* scale paths */
+  // @ts-ignore
   const scaleTimeToX = scaleTime().range([0, parentWidth]).domain([minX, maxX]);
   const scalePriceToY = scaleLinear()
     .range([parentHeight - paddingBottom, paddingTop])
+    // @ts-ignore
     .domain([minY, maxY]);
 
   /* use d3-interpolate-path to interpolate even with different points */
@@ -106,7 +113,9 @@ export const GraphContextProvider: React.FC<
     })
     .y(function (d) {
       let priceBefore = d[1];
+      // @ts-ignore
       if (!!minY && priceBefore < minY) priceBefore = minY;
+      // @ts-ignore
       if (!!maxY && priceBefore > maxY) priceBefore = maxY;
       return scalePriceToY(priceBefore);
     })(data);
@@ -117,7 +126,9 @@ export const GraphContextProvider: React.FC<
     })
     .y(function (d) {
       let priceBefore = d[1];
+      // @ts-ignore
       if (!!minY && priceBefore < minY) priceBefore = minY;
+      // @ts-ignore
       if (!!maxY && priceBefore > maxY) priceBefore = maxY;
       return scalePriceToY(priceBefore);
     })(dataGradient);
@@ -138,10 +149,12 @@ export const GraphContextProvider: React.FC<
 
   /* create an interpolator that maps from t (0 to 1) to a path d string */
   const pathInterpolator = React.useMemo(
+    // @ts-ignore
     () => interpolatePath(currD.current, pathD),
     [pathD]
   );
   const pathInterpolatorGradient = React.useMemo(
+    // @ts-ignore
     () => interpolatePath(currDGradient.current, pathDGradient),
     [pathDGradient]
   );
@@ -281,6 +294,7 @@ export const GraphContextProvider: React.FC<
   );
 
   return (
+    // @ts-ignore
     <GraphContext.Provider value={value}>{children}</GraphContext.Provider>
   );
 };

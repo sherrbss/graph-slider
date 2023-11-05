@@ -12,8 +12,8 @@ function useElementSize(ref: React.RefObject<HTMLDivElement>) {
         // console.log("BOUNDING", { boundingBox });
         setSize((prev) => ({
           left: ref.current?.getBoundingClientRect().x ?? prev.left,
-          width: ref.current.offsetWidth,
-          height: ref.current.offsetHeight,
+          width: ref.current?.offsetWidth ?? prev.width,
+          height: ref.current?.offsetHeight ?? prev.height,
         }));
       }
     };

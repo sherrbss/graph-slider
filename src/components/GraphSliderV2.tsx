@@ -36,7 +36,7 @@ function rgbToHex(value: { r: number; g: number; b: number }) {
   );
 }
 
-function useAnimatedPath({ toggle, delay }) {
+function useAnimatedPath({ toggle, delay }: { toggle: any; delay: any }) {
   const [length, setLength] = React.useState(null);
   const animatedStyle = useSpring({
     strokeDashoffset: toggle ? 0 : length,
@@ -46,7 +46,7 @@ function useAnimatedPath({ toggle, delay }) {
 
   return {
     style: animatedStyle,
-    ref: (ref) => {
+    ref: (ref: any) => {
       if (ref) {
         setLength(ref.getTotalLength());
       }
@@ -54,7 +54,7 @@ function useAnimatedPath({ toggle, delay }) {
   };
 }
 
-function useAnimatedFill({ toggle, delay }) {
+function useAnimatedFill({ toggle, delay }: { toggle: any; delay: any }) {
   const [length, setLength] = React.useState(null);
   const animatedStyle = useSpring({
     ...(!toggle && {
@@ -65,7 +65,7 @@ function useAnimatedFill({ toggle, delay }) {
 
   return {
     style: animatedStyle,
-    ref: (ref) => {
+    ref: (ref: any) => {
       if (ref) {
         setLength(ref.getTotalLength());
       }
