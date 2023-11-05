@@ -1,4 +1,5 @@
 import GraphSlider from "@/components/GraphSlider";
+import GraphSliderV2 from "@/components/GraphSliderV2";
 import ThemeSwitcher from "@/components/ThemeSwitcher";
 
 export default function Home() {
@@ -14,6 +15,10 @@ export default function Home() {
 
       <div className="flex md:px-40 px-2 md:pb-16 pb-8 md:pt-4 pt-0 bg-[--gray-2] border-[--gray-4] border rounded-lg [&>*]:select-none">
         <GraphSlider />
+      </div>
+
+      <div className="flex md:px-40 px-2 md:pb-16 pb-8 md:pt-4 pt-0 bg-[--gray-2] border-[--gray-4] border rounded-lg [&>*]:select-none">
+        <GraphSliderV2 />
       </div>
     </main>
   );

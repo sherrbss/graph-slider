@@ -88,13 +88,6 @@ const GraphSliderV2Internals: React.FC<
     parentHeight,
     parentLeft,
     getTimeFromX,
-    // strokeDashOffsetInterpolator,
-    // strokeDashOffsetInterpolatorGradient,
-    // initialSpringProps,
-    // initialSpringPropsGradient,
-    // strokeDashOffset,
-    // strokeDashOffsetGradient,
-    initialClipPath,
   } = useGraphContext();
 
   const [toggle, setToggle] = React.useState(false);

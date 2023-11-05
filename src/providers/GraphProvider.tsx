@@ -31,7 +31,6 @@ type GraphContextData = {
   };
   pathInterpolator: (t: number) => string;
   pathInterpolatorGradient: (t: number) => string;
-  initialClipPath: string;
   graphSlider: React.RefObject<HTMLDivElement>;
   dot: React.RefObject<HTMLDivElement>;
   parentWidth: number;
@@ -170,7 +169,6 @@ export const GraphContextProvider: React.FC<
     React.useState(0);
   const currStrokeDashOffset = React.useRef(strokeDashOffset);
   const currStrokeDashOffsetGradient = React.useRef(strokeDashOffsetGradient);
-  const [initialClipPath, setClipPath] = React.useState("");
 
   /* create a spring that maps from t = 0 (start animation) to t = 1 (end of animation) */
   const springProps = useSpring({
@@ -214,30 +212,30 @@ export const GraphContextProvider: React.FC<
     },
   });
 
-  const initialClipPathRef = React.useRef(false);
-  const springPropsClipPath = useSpring({
-    immediate: !mounted,
-    from: { t: 0 },
-    to: { t: 1 },
-    reset: !initialClipPathRef.current,
-    onChange: (result) => {
-      const x = strokeDashOffsetInterpolator(result.value.t);
-      const val = `inset(0 ${parentWidth - x - 2 * 2}px 0 0)`;
-      console.log("CLIP PATH", val);
-      setClipPath(val);
-      // if (initialGradientAnimationDoneRef.current) {
-      //   currDGradient.current = pathInterpolatorGradient(result.value.t);
-      // } else {
-      //   currDGradient.current = pathDGradient;
-      // }
-    },
-    onRest: () => {
-      if (!initialClipPathRef.current) {
-        console.log("INITIAL CLIP PATH DONE");
-        initialClipPathRef.current = true;
-      }
-    },
-  });
+  // const initialClipPathRef = React.useRef(false);
+  // const springPropsClipPath = useSpring({
+  //   immediate: !mounted,
+  //   from: { t: 0 },
+  //   to: { t: 1 },
+  //   reset: !initialClipPathRef.current,
+  //   onChange: (result) => {
+  //     const x = strokeDashOffsetInterpolator(result.value.t);
+  //     const val = `inset(0 ${parentWidth - x - 2 * 2}px 0 0)`;
+  //     console.log("CLIP PATH", val);
+  //     setClipPath(val);
+  //     // if (initialGradientAnimationDoneRef.current) {
+  //     //   currDGradient.current = pathInterpolatorGradient(result.value.t);
+  //     // } else {
+  //     //   currDGradient.current = pathDGradient;
+  //     // }
+  //   },
+  //   onRest: () => {
+  //     if (!initialClipPathRef.current) {
+  //       console.log("INITIAL CLIP PATH DONE");
+  //       initialClipPathRef.current = true;
+  //     }
+  //   },
+  // });
 
   // TODO - fixme - this is hacky
   const getTimeFromX = React.useCallback(
@@ -266,7 +264,6 @@ export const GraphContextProvider: React.FC<
       parentHeight,
       parentLeft,
       getTimeFromX,
-      initialClipPath,
     }),
     [
       pathD,
@@ -280,7 +277,6 @@ export const GraphContextProvider: React.FC<
       parentHeight,
       parentLeft,
       getTimeFromX,
-      initialClipPath,
     ]
   );
 
